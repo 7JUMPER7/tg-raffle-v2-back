@@ -1,0 +1,48 @@
+{
+    "name": "tg-gift-rafl-back",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "start": "node dist/index.js",
+        "build": "tsc",
+        "init_session": "node dist/scripts/initTelegramSession.js",
+        "generate_wallet": "node dist/scripts/generateWallet.js",
+        "referrer_gifts": "node dist/scripts/referrerGifts.js",
+        "validate_gifts": "node dist/scripts/validateGifts.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "@ton/core": "^0.61.0",
+        "@ton/crypto": "^3.3.0",
+        "@ton/ton": "^15.3.1",
+        "axios": "^1.7.9",
+        "buffer": "^6.0.3",
+        "cors": "^2.8.5",
+        "crypto-js": "^4.2.0",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "jsonwebtoken": "^9.0.2",
+        "node-telegram-bot-api": "^0.66.0",
+        "pg": "^8.13.1",
+        "referral-codes": "^3.0.0",
+        "sequelize": "^6.37.5",
+        "sequelize-typescript": "^2.1.6",
+        "telegram": "^2.26.22",
+        "uuid": "^11.1.0",
+        "ws": "^8.18.3"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^5.0.2",
+        "@types/cors": "^2.8.17",
+        "@types/crypto-js": "^4.2.2",
+        "@types/express": "^4.17.21",
+        "@types/jsonwebtoken": "^9.0.7",
+        "@types/node": "^24.0.8",
+        "@types/node-telegram-bot-api": "^0.64.10",
+        "@types/ws": "^8.18.1",
+        "typescript": "^5.7.3"
+    }
+}
