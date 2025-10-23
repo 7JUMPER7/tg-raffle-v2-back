@@ -66,7 +66,7 @@ class User extends Model<User> {
         allowNull: false,
         defaultValue: 0.0,
     })
-    declare pointsBalance: number;
+    declare starsBalance: number;
 
     @Column({
         type: DataType.STRING,
@@ -80,7 +80,7 @@ class User extends Model<User> {
         allowNull: false,
         defaultValue: 0.0,
     })
-    declare referralTicketsAmount: number;
+    declare referralTonAmount: number;
 
     @ForeignKey(() => Lottery)
     @Column({

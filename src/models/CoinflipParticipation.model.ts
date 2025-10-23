@@ -1,14 +1,14 @@
 import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
-import Lottery from "./Lottery.model";
 import User from "./User.model";
+import CoinflipRoom from "./CoinflipRoom";
 import Gift from "./Gift.model";
 
 @Table({
-    tableName: "lottery_participations",
+    tableName: "coinflip_participations",
     timestamps: true,
     paranoid: true,
 })
-class LotteryParticipation extends Model<LotteryParticipation> {
+class CoinflipParticipation extends Model<CoinflipParticipation> {
     @Column({
         type: DataType.UUID,
         allowNull: false,
@@ -16,14 +16,14 @@ class LotteryParticipation extends Model<LotteryParticipation> {
     })
     declare id: string;
 
-    @ForeignKey(() => Lottery)
+    @ForeignKey(() => CoinflipRoom)
     @Column({
         type: DataType.UUID,
         allowNull: false,
     })
-    declare lotteryId: string;
-    @BelongsTo(() => Lottery)
-    declare lottery: Lottery;
+    declare roomId: string;
+    @BelongsTo(() => CoinflipRoom)
+    declare room: CoinflipRoom;
 
     @ForeignKey(() => User)
     @Column({
@@ -44,11 +44,10 @@ class LotteryParticipation extends Model<LotteryParticipation> {
     declare gift: Gift;
 
     @Column({
-        type: DataType.DOUBLE,
+        type: DataType.INTEGER,
         allowNull: false,
-        defaultValue: 0.0,
     })
-    declare tonAmount: number;
+    declare side: number;
 }
 
-export default LotteryParticipation;
+export default CoinflipParticipation;

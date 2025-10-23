@@ -1,5 +1,6 @@
 import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
 import User from "./User.model";
+import { EGiftQuality } from "../helpers/Enums";
 
 @Table({
     tableName: "gifts",
@@ -23,20 +24,6 @@ class Gift extends Model<Gift> {
     declare user: User | null;
 
     @Column({
-        type: DataType.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-    })
-    declare isUsed: boolean;
-
-    @Column({
-        type: DataType.BOOLEAN,
-        allowNull: false,
-        defaultValue: true,
-    })
-    declare isClaimed: boolean;
-
-    @Column({
         type: DataType.BIGINT,
         allowNull: false,
     })
@@ -47,6 +34,13 @@ class Gift extends Model<Gift> {
         allowNull: false,
     })
     declare importMsgId: number;
+
+    @Column({
+        type: DataType.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    })
+    declare isUsed: boolean;
 
     @Column({
         type: DataType.STRING,
@@ -66,11 +60,17 @@ class Gift extends Model<Gift> {
     declare backdropColor: string | null;
 
     @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    declare quality: EGiftQuality;
+
+    @Column({
         type: DataType.DOUBLE,
         allowNull: false,
         defaultValue: 0.0,
     })
-    declare ticketsPrice: number;
+    declare tonPrice: number;
 
     @Column({
         type: DataType.DATE,

@@ -1,4 +1,4 @@
-import { ELotteryStatus } from "./Enums";
+import { EGiftQuality, ELotteryStatus } from "./Enums";
 
 export type TUser = {
     tgId: string;
@@ -16,6 +16,13 @@ export type TGift = {
     slug: string;
     image?: string;
     tickets: number;
+};
+
+export type TCaseItem = {
+    slug: string;
+    image: string;
+    backdropColor: string;
+    quality: EGiftQuality;
 };
 
 export type TLotteryParticipation = {

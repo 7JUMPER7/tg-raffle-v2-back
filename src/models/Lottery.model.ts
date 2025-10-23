@@ -30,12 +30,6 @@ class Lottery extends Model<Lottery> {
     @BelongsTo(() => User)
     declare winner?: User;
 
-    @Column({
-        type: DataType.BOOLEAN,
-        defaultValue: false,
-    })
-    declare isWinnerAnonymous: boolean;
-
     @ForeignKey(() => LotteryParticipation)
     @Column({
         type: DataType.UUID,
