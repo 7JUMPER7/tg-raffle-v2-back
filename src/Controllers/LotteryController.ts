@@ -40,14 +40,12 @@ class ParticipateTask {
     lotteryId: string;
     userId: string;
     betGifts: Gift[];
-    isAnonymous: boolean;
     res: Response;
     next: NextFunction;
-    constructor(lotteryId: string, userId: string, betGifts: Gift[], isAnonymous: boolean, res: Response, next: NextFunction) {
+    constructor(lotteryId: string, userId: string, betGifts: Gift[], res: Response, next: NextFunction) {
         this.lotteryId = lotteryId;
         this.userId = userId;
         this.betGifts = betGifts;
-        this.isAnonymous = isAnonymous;
         this.res = res;
         this.next = next;
     }
@@ -122,21 +120,19 @@ class LotteryController {
                     return next(ApiError.badRequest(`Gift ${gift.slug} does not belong to user`));
                 } else if (gift.isUsed) {
                     return next(ApiError.badRequest(`Gift ${gift.slug} is already used`));
-                } else if (!gift.isClaimed) {
-                    return next(ApiError.badRequest(`Gift ${gift.slug} is not claimed`));
                 } else if (gift.withdrawnAt !== null) {
                     return next(ApiError.badRequest(`Gift ${gift.slug} is already withdrawn`));
                 }
-                const ticketsPrice = await XGiftAPI.calculateGiftTickets(gift.slug, gift.backdropColor);
-                if (ticketsPrice <= 0) {
+                const tonPrice = await XGiftAPI.getGiftTonPrice(gift.slug, gift.backdropColor);
+                if (tonPrice <= 0) {
                     return next(ApiError.badRequest(`Gift ${gift.slug} price not found`));
                 }
-                gift.ticketsPrice = ticketsPrice;
+                gift.tonPrice = tonPrice;
                 await gift.save();
             }
 
             // Add participation task to queue
-            this.taskQueue.push(new ParticipateTask(dbLottery.id, dbUser.id, dbGifts, isAnonymous ?? false, res, next));
+            this.taskQueue.push(new ParticipateTask(dbLottery.id, dbUser.id, dbGifts, res, next));
             this.processQueue();
         } catch (e: any) {
             console.error("LotteryController participateRequest error:", e.message);
@@ -206,9 +202,9 @@ class LotteryController {
         while (this.taskQueue.length) {
             const task = this.taskQueue.shift()!;
             if (task instanceof ParticipateTask) {
-                const { lotteryId, userId, betGifts, isAnonymous, res, next } = task;
+                const { lotteryId, userId, betGifts, res, next } = task;
                 try {
-                    const result = await this.participate(lotteryId, userId, betGifts, isAnonymous);
+                    const result = await this.participate(lotteryId, userId, betGifts);
                     res.json({ success: true, result });
                 } catch (e: any) {
                     if (e instanceof ApiError) {
@@ -256,7 +252,7 @@ class LotteryController {
     };
 
     // Participate function (runs synchronously)
-    participate = async (lotteryId: string, userId: string, betGifts: Gift[], isAnonymous: boolean) => {
+    participate = async (lotteryId: string, userId: string, betGifts: Gift[]) => {
         // Get active lotteries by size
         let userParticipations = [];
 
@@ -280,7 +276,7 @@ class LotteryController {
         // Participate in the lottery
         const participatedGifts: TGift[] = [];
         for (const gift of betGifts) {
-            const participation = await ParticipationDBController.create(user.id, lottery.id, gift.id, gift.ticketsPrice, isAnonymous);
+            const participation = await ParticipationDBController.create(user.id, lottery.id, gift.id, gift.tonPrice);
             if (participation) {
                 userParticipations.push(participation);
                 participatedGifts.push(GiftDBController.parseGift(gift));
@@ -304,8 +300,7 @@ class LotteryController {
             data: {
                 lotteryId: lottery.id,
                 expiresAt: lottery.expiresAt,
-                isAnon: isAnonymous,
-                user: isAnonymous ? undefined : UserDBController.parseUser(user),
+                user: UserDBController.parseUser(user),
                 gifts: participatedGifts,
                 createdAt: new Date(),
             },
@@ -335,9 +330,9 @@ class LotteryController {
             for (const participation of lottery.participations) {
                 const tickets = participantTickets.get(participation.userId);
                 if (tickets !== undefined) {
-                    participantTickets.set(participation.userId, tickets + +participation.ticketsAmount);
+                    participantTickets.set(participation.userId, tickets + +participation.tonAmount);
                 } else {
-                    participantTickets.set(participation.userId, +participation.ticketsAmount);
+                    participantTickets.set(participation.userId, +participation.tonAmount);
                 }
             }
 
@@ -367,23 +362,22 @@ class LotteryController {
             const winnerParticipations = lottery.participations.filter((p) => p.userId === winnerUserId);
             const randomIndex = Math.floor(Math.random() * winnerParticipations.length);
             lottery.winParticipationId = winnerParticipations[randomIndex].id;
-            lottery.isWinnerAnonymous = winnerParticipations.findIndex((p) => p.isAnonymous) !== -1;
             // Update lottery status
             lottery.status = ELotteryStatus.FINISHED;
             await lottery.save();
 
             // Get the most expensive gifts that is lower than SERVICE_FEE_PERCENT of total gifts price
-            const totalGiftsPrice = lottery.participations.reduce((sum, p) => sum + p.ticketsAmount, 0);
+            const totalGiftsPrice = lottery.participations.reduce((sum, p) => sum + p.tonAmount, 0);
             const serviceFeeLimit = (totalGiftsPrice * SERVICE_FEE_PERCENT) / 100;
             const feeGifts: LotteryParticipation[] = [];
-            let feeGiftsTicketsAmount = 0;
+            let feeGiftsTonAmount = 0;
             lottery.participations
-                .filter((p) => p.ticketsAmount <= serviceFeeLimit)
-                .sort((a, b) => b.ticketsAmount - a.ticketsAmount)
+                .filter((p) => p.tonAmount <= serviceFeeLimit)
+                .sort((a, b) => b.tonAmount - a.tonAmount)
                 .forEach((p) => {
-                    if (feeGiftsTicketsAmount + p.ticketsAmount <= serviceFeeLimit) {
+                    if (feeGiftsTonAmount + p.tonAmount <= serviceFeeLimit) {
                         feeGifts.push(p);
-                        feeGiftsTicketsAmount += p.ticketsAmount;
+                        feeGiftsTonAmount += p.tonAmount;
                     }
                 });
             console.log(
@@ -403,15 +397,16 @@ class LotteryController {
             const winnerUser = await UserDBController.get(winnerUserId);
             if (winnerUser) {
                 winnerUser.wonLotteryId = lottery.id;
-                await UserDBController.updateBalances(winnerUser, 0, POINTS_AMOUNT.win, 0);
+                await UserDBController.updateBalances(winnerUser, 0, POINTS_AMOUNT.win);
 
                 // Update referrer
-                if (winnerUser.referrerId && feeGiftsTicketsAmount !== 0) {
+                if (winnerUser.referrerId && feeGiftsTonAmount !== 0) {
                     const referrer = await UserDBController.get(winnerUser.referrerId);
                     if (referrer) {
-                        const refTicketsAmount = Math.floor((feeGiftsTicketsAmount * REFERRAL_FEE_PERCENT) / 100);
-                        console.log("Referrer", referrer.id, "referral tickets:", refTicketsAmount);
-                        await UserDBController.updateBalances(referrer, 0, 0, refTicketsAmount);
+                        // TODO: add correct referral reward
+                        // const refTicketsAmount = Math.floor((feeGiftsTicketsAmount * REFERRAL_FEE_PERCENT) / 100);
+                        // console.log("Referrer", referrer.id, "referral tickets:", refTicketsAmount);
+                        // await UserDBController.updateBalances(referrer, 0, 0, refTicketsAmount);
                     }
                 }
 

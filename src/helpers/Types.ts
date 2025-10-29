@@ -15,7 +15,7 @@ export type TWithdrawUser = {
 export type TGift = {
     slug: string;
     image?: string;
-    tickets: number;
+    price: number;
 };
 
 export type TCaseItem = {
@@ -27,8 +27,7 @@ export type TCaseItem = {
 
 export type TLotteryParticipation = {
     id: string;
-    isAnon: boolean;
-    user?: TUser;
+    user: TUser;
     gift: TGift;
     createdAt: Date;
 };
@@ -43,10 +42,9 @@ export type TLotteryParsed = {
 };
 
 export type TLuckyOne = {
-    isAnon: boolean;
     user?: TUser;
     gifts: TGift[];
-    totalTickets: number;
+    totalTon: number;
     totalParticipations: number;
 };
 
@@ -57,8 +55,9 @@ export type TFullUserInfo = {
     telegramName: string | null;
     telegramImage: string | null;
     referralCode: string;
-    gifts: (TGift & { id: string; isUsed: boolean; isClaimed: boolean })[];
+    gifts: (TGift & { id: string; isUsed: boolean })[];
     tonBalance: number;
+    starsBalance: number;
     pointsBalance: number;
     enteredLottery: {
         lotteryId: string;

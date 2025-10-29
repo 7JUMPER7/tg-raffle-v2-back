@@ -143,8 +143,8 @@ class TelegramService {
                 }
 
                 TelegramBotService.sendGiftDepositMessage(dbUser.telegramId, gift.slug, dbUser.telegramLanguage);
-                const ticketsPrice = await XGiftAPI.calculateGiftTickets(gift.slug, backgroundColor);
-                await GiftDBController.create(dbUser.id, userId, message.id, gift.slug, ticketsPrice, backgroundColor);
+                const tonPrice = await XGiftAPI.getGiftTonPrice(gift.slug, backgroundColor);
+                await GiftDBController.create(dbUser.id, userId, message.id, gift.slug, tonPrice, backgroundColor);
             }
         } catch (e: any) {
             console.error("TelegramService processNewGift error:", e.message);

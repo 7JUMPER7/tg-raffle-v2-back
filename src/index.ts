@@ -26,12 +26,12 @@ const start = async () => {
         await sequelize.authenticate();
         await sequelize.sync();
 
-        // Start message listening
-        await TelegramService.checkForSkippedGifts();
-        TelegramService.listenGiftMessages();
+        // // Start message listening
+        // await TelegramService.checkForSkippedGifts();
+        // TelegramService.listenGiftMessages();
 
-        // Start telegram bot
-        TelegramBotService.start();
+        // // Start telegram bot
+        // TelegramBotService.start();
 
         // Start lottery autocancel service
         LotteryAutocancelService.startLoop();

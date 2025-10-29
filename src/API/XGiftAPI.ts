@@ -49,7 +49,7 @@ class XGiftController {
         }
     };
 
-    calculateGiftTickets = async (slug: string, backdropColor: string | null | undefined): Promise<number> => {
+    getGiftTonPrice = async (slug: string, backdropColor: string | null | undefined): Promise<number> => {
         try {
             let maxTONPrice;
             if (backdropColor && this.ceilCollections[backdropColor as EBackdropColor]) {
@@ -62,7 +62,7 @@ class XGiftController {
                 if (maxTONPrice && giftTONPrice > maxTONPrice) {
                     giftTONPrice = maxTONPrice * 0.95;
                 }
-                return this.tonToTickets(giftTONPrice);
+                return giftTONPrice;
             }
             return 0;
         } catch (error: any) {
@@ -75,17 +75,8 @@ class XGiftController {
         if (!lottery.participations || lottery.participations.length === 0) {
             return null;
         }
-        const totalTicketsPrice = lottery.participations.reduce((sum, p) => sum + p.ticketsAmount, 0);
-        const totalTon = this.ticketsToTon(totalTicketsPrice);
-        return { tonValue: totalTon };
-    };
-
-    tonToTickets = (ton: number): number => {
-        return Math.max(1, Math.round(ton * 10));
-    };
-
-    ticketsToTon = (tickets: number): number => {
-        return parseFloat((tickets / 10).toFixed(9));
+        const totalTicketsPrice = lottery.participations.reduce((sum, p) => sum + p.tonAmount, 0);
+        return { tonValue: totalTicketsPrice };
     };
 }
 

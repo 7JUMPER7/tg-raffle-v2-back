@@ -31,9 +31,6 @@ class GiftController {
             if (dbGift.isUsed) {
                 return next(ApiError.badRequest(`Gift is already used`));
             }
-            if (!dbGift.isClaimed) {
-                return next(ApiError.badRequest(`Gift is not claimed`));
-            }
             if (dbGift.withdrawnAt !== null) {
                 return next(ApiError.badRequest(`Gift is already withdrawn`));
             }

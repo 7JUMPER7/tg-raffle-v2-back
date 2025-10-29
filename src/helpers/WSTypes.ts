@@ -9,7 +9,6 @@ export type TWebSocketMessage<T> = {
 export type TWebSocketParticipation = {
     lotteryId: string;
     expiresAt: Date | null;
-    isAnon: boolean;
     user?: TUser;
     gifts: TGift[];
     createdAt: Date;

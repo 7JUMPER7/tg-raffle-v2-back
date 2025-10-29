@@ -11,7 +11,7 @@ class GiftDBController {
         importUserTgId: string,
         importMsgId: number,
         slug: string,
-        ticketsPrice: number,
+        tonPrice: number,
         backdropColor?: string
     ) => {
         try {
@@ -25,7 +25,7 @@ class GiftDBController {
                 slug,
                 image,
                 backdropColor,
-                ticketsPrice,
+                tonPrice,
             } as Gift);
             return gift;
         } catch (e: any) {
@@ -97,7 +97,7 @@ class GiftDBController {
         return {
             slug: gift.slug,
             image: gift.image,
-            tickets: gift.ticketsPrice,
+            price: gift.tonPrice,
         };
     };
 

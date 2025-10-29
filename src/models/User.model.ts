@@ -69,6 +69,13 @@ class User extends Model<User> {
     declare starsBalance: number;
 
     @Column({
+        type: DataType.DOUBLE,
+        allowNull: false,
+        defaultValue: 0.0,
+    })
+    declare pointsBalance: number;
+
+    @Column({
         type: DataType.STRING,
         unique: true,
         allowNull: false,

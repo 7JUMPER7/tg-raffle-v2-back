@@ -83,26 +83,18 @@ class LotteryDBController {
         let winner: TUser | undefined;
         let winParticipation: TLotteryParticipation | undefined;
         if (lottery.winner) {
-            if (lottery.isWinnerAnonymous === true) {
-                winner = {
-                    tgId: "0",
-                    displayName: "Anonymous",
-                    image: undefined,
-                };
-            } else {
-                winner = UserDBController.parseUser(lottery.winner);
-            }
+            winner = UserDBController.parseUser(lottery.winner);
         }
+        // TODO: check this
         if (lottery.winParticipation) {
             const wp = lottery.winParticipation;
             winParticipation = {
                 id: wp.id,
-                isAnon: wp.isAnonymous,
-                user: undefined,
+                user: UserDBController.parseUser(wp.user),
                 gift: {
                     slug: wp.gift.slug,
                     image: wp.gift.image,
-                    tickets: wp.gift.ticketsPrice,
+                    price: wp.gift.tonPrice,
                 },
                 createdAt: wp.createdAt,
             };
@@ -116,8 +108,7 @@ class LotteryDBController {
                 lottery.participations?.map((p) => {
                     return {
                         id: p.id,
-                        isAnon: p.isAnonymous,
-                        user: p.user && !p.isAnonymous ? UserDBController.parseUser(p.user) : undefined,
+                        user: UserDBController.parseUser(p.user),
                         gift: GiftDBController.parseGift(p.gift),
                         createdAt: p.createdAt,
                     } as TLotteryParticipation;
@@ -150,14 +141,13 @@ class LotteryDBController {
             });
 
             const parsedLotteries = lotteries.map((lottery) => {
-                const winner = lottery.winner && !lottery.isWinnerAnonymous ? UserDBController.parseUser(lottery.winner) : undefined;
+                const winner = lottery.winner ? UserDBController.parseUser(lottery.winner) : undefined;
                 const luckyOne: TLuckyOne = {
-                    isAnon: lottery.isWinnerAnonymous,
                     user: winner,
                     gifts: lottery.participations.map((p) => {
-                        return { ...GiftDBController.parseGift(p.gift), tickets: p.ticketsAmount };
+                        return { ...GiftDBController.parseGift(p.gift), price: p.tonAmount };
                     }),
-                    totalTickets: lottery.participations.reduce((acc, p) => acc + p.ticketsAmount, 0),
+                    totalTon: lottery.participations.reduce((acc, p) => acc + p.tonAmount, 0),
                     totalParticipations: lottery.participations.length,
                 };
                 return luckyOne;

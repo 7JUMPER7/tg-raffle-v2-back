@@ -251,7 +251,7 @@ class TelegramBotService {
 
                 let message = `Fee gifts (${feeGifts.length}):\n\n`;
                 for (const gift of feeGifts) {
-                    message += `- <b>${gift.slug}</b> (${gift.ticketsPrice} tickets) - <code>${gift.id}</code>\n`;
+                    message += `- <b>${gift.slug}</b> (${gift.tonPrice} TON) - <code>${gift.id}</code>\n`;
                 }
 
                 await this.bot.sendMessage(msg.chat.id, message, { parse_mode: "HTML" });
@@ -325,7 +325,7 @@ class TelegramBotService {
 
                 let message = `Slug: <b>${gift.slug}</b>`;
                 message += `\nID: <code>${gift.id}</code>`;
-                message += `\nTickets: <b>${gift.ticketsPrice}</b>`;
+                message += `\nTON: <b>${gift.tonPrice}</b>`;
                 message += `\nOwner: ${ownerText}`;
 
                 if (gift.image) {

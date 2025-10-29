@@ -9,12 +9,12 @@ const sequelize = new Sequelize(process.env.DATABASE_URL!, {
     dialect: "postgres",
     models: [__dirname + "/models"],
     timezone: "utc",
-    dialectOptions: {
-        ssl: {
-            require: true,
-            rejectUnauthorized: false,
-        },
-    },
+    // dialectOptions: {
+    //     ssl: {
+    //         require: true,
+    //         rejectUnauthorized: false,
+    //     },
+    // },
     logging: false,
 });
 

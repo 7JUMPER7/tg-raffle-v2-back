@@ -53,9 +53,10 @@ class UserController {
                 telegramImage: dbUser.telegramImage,
                 referralCode: dbUser.referralCode,
                 gifts: dbUser.gifts.map((g) => {
-                    return { id: g.id, slug: g.slug, image: g.image, tickets: g.ticketsPrice, isUsed: g.isUsed, isClaimed: g.isClaimed };
+                    return { id: g.id, slug: g.slug, image: g.image, price: g.tonPrice, isUsed: g.isUsed };
                 }),
                 tonBalance: dbUser.tonBalance,
+                starsBalance: dbUser.starsBalance,
                 pointsBalance: dbUser.pointsBalance,
                 enteredLottery: enteredLottery,
                 wonLottery: wonLottery,
@@ -115,7 +116,7 @@ class UserController {
                     );
                     if (isSubscribed === true) {
                         dbUser.subscribedChat = true;
-                        await UserDBController.updateBalances(dbUser, 0, POINTS_AMOUNT.subscribe, 0);
+                        await UserDBController.updateBalances(dbUser, 0, POINTS_AMOUNT.subscribe);
                         isUserSubscribed = true;
                     }
                     break;
@@ -132,7 +133,7 @@ class UserController {
                     );
                     if (isSubscribed === true) {
                         dbUser.subscribedChannel = true;
-                        await UserDBController.updateBalances(dbUser, 0, POINTS_AMOUNT.subscribe, 0);
+                        await UserDBController.updateBalances(dbUser, 0, POINTS_AMOUNT.subscribe);
                         isUserSubscribed = true;
                     }
                     break;

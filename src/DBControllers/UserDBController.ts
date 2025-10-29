@@ -165,7 +165,7 @@ class UserDBController {
         };
     };
 
-    updateBalances = async (user: User, tonBalance: number, pointsBalance: number, referralTicketsBalance: number) => {
+    updateBalances = async (user: User, tonBalance: number, pointsBalance: number) => {
         if (tonBalance !== 0) {
             user.tonBalance = parseFloat((user.tonBalance + tonBalance).toFixed(9));
             if (user.tonBalance < 0) {
@@ -176,12 +176,6 @@ class UserDBController {
             user.pointsBalance = parseFloat((user.pointsBalance + pointsBalance).toFixed(3));
             if (user.pointsBalance < 0) {
                 user.pointsBalance = 0;
-            }
-        }
-        if (referralTicketsBalance !== 0) {
-            user.referralTicketsAmount = parseFloat((user.referralTicketsAmount + referralTicketsBalance).toFixed(3));
-            if (user.referralTicketsAmount < 0) {
-                user.referralTicketsAmount = 0;
             }
         }
         await user.save();

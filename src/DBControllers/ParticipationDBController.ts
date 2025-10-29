@@ -4,15 +4,14 @@ import LotteryParticipation from "../models/LotteryParticipation.model";
 import { v4 } from "uuid";
 
 class ParticipationDBController {
-    create = async (userId: string, lotteryId: string, giftId: string, ticketsAmount: number, isAnonymous: boolean) => {
+    create = async (userId: string, lotteryId: string, giftId: string, tonAmount: number) => {
         try {
             const participation = await LotteryParticipation.create({
                 id: v4(),
                 userId,
                 lotteryId,
                 giftId,
-                ticketsAmount,
-                isAnonymous,
+                tonAmount,
             } as LotteryParticipation);
             await Gift.update({ isUsed: true }, { where: { id: giftId } });
             return participation;
