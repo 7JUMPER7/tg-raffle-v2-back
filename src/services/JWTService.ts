@@ -8,7 +8,8 @@ if (!process.env.JWT_ACCESS_SECRET) {
 
 class JWTService {
     generateToken(payload: JwtUserPayload) {
-        const token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "1h" });
+        // const token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "1h" });
+        const token = jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, { expiresIn: "10h" }); // TODO: delete
         return "Bearer " + token;
     }
 

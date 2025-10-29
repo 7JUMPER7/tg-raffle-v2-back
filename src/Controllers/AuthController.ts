@@ -71,6 +71,11 @@ class AuthController {
                 }
             }
 
+            const dbUser = await UserDBController.getByTGId(telegramId);
+            if (dbUser) {
+                return next(ApiError.badRequest("User already exists"));
+            }
+
             const user = await UserDBController.create(telegramId, username, name, photoUrl, language, referrerId);
             if (!user) {
                 return next(ApiError.internal("User registration failed"));
