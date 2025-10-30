@@ -1,5 +1,6 @@
 // When lottery will exipre
-export const SECONDS_TO_EXPIRE = 30;
+// export const SECONDS_TO_EXPIRE = 30;
+export const SECONDS_TO_EXPIRE = 10;
 
 // Minimum number of users to start closing lottery
 export const MIN_USERS_TO_CLOSE_LOTTERY = 2;

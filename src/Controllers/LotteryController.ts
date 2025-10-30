@@ -9,7 +9,6 @@ import GiftDBController from "../DBControllers/GiftDBController";
 import LotteryWebSocketService from "../services/LotteryWebSocketService";
 import { TWebSocketMessage, TWebSocketParticipation } from "../helpers/WSTypes";
 import { AuthenticatedRequest } from "../helpers/Interfaces";
-import User from "../models/User.model";
 import Gift from "../models/Gift.model";
 import LotteryParticipation from "../models/LotteryParticipation.model";
 import XGiftAPI from "../API/XGiftAPI";
@@ -18,32 +17,17 @@ import {
     LOTTERY_SPIN_ANIMATION_LENGTH,
     MIN_USERS_TO_CLOSE_LOTTERY,
     POINTS_AMOUNT,
-    REFERRAL_FEE_PERCENT,
     SECONDS_TO_EXPIRE,
     SERVICE_FEE_PERCENT,
 } from "../configVars";
 
-// Enter lottery task class
-class EnterTask {
-    user: User;
-    res: Response;
-    next: NextFunction;
-    constructor(user: User, res: Response, next: NextFunction) {
-        this.user = user;
-        this.res = res;
-        this.next = next;
-    }
-}
-
 // Participate in the lottery task class
 class ParticipateTask {
-    lotteryId: string;
     userId: string;
     betGifts: Gift[];
     res: Response;
     next: NextFunction;
-    constructor(lotteryId: string, userId: string, betGifts: Gift[], res: Response, next: NextFunction) {
-        this.lotteryId = lotteryId;
+    constructor(userId: string, betGifts: Gift[], res: Response, next: NextFunction) {
         this.userId = userId;
         this.betGifts = betGifts;
         this.res = res;
@@ -52,33 +36,8 @@ class ParticipateTask {
 }
 
 class LotteryController {
-    private taskQueue: (EnterTask | ParticipateTask)[] = [];
+    private taskQueue: ParticipateTask[] = [];
     private processing = false;
-
-    // Enter room endpoint (runs asynchronously)
-    enterRequest = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-        try {
-            const userId = req.userPayload?.userId;
-            if (!userId) {
-                return next(ApiError.unauthorized("User not authenticated"));
-            }
-
-            const dbUser = await UserDBController.get(userId);
-            if (!dbUser) {
-                return next(ApiError.notFound("User not found"));
-            }
-            if (dbUser.enteredLotteryId !== null) {
-                return next(ApiError.badRequest("User has already entered a lottery"));
-            }
-
-            // Add entry task to queue
-            this.taskQueue.push(new EnterTask(dbUser, res, next));
-            this.processQueue();
-        } catch (e: any) {
-            console.error("LotteryController enterRequest error:", e.message);
-            return next(ApiError.internal(e.message));
-        }
-    };
 
     // Participate endpoint (runs asynchronously)
     participateRequest = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -88,8 +47,8 @@ class LotteryController {
                 return next(ApiError.unauthorized("User not authenticated"));
             }
 
-            const { lotteryId, giftIds, isAnonymous } = req.body;
-            if (!lotteryId || !giftIds) {
+            const { giftIds } = req.body;
+            if (!giftIds) {
                 return next(ApiError.badRequest("Missing required parameters"));
             }
 
@@ -100,14 +59,6 @@ class LotteryController {
             const dbUser = await UserDBController.get(userId);
             if (!dbUser) {
                 return next(ApiError.notFound("User not found"));
-            }
-
-            const dbLottery = await LotteryDBController.get(lotteryId);
-            if (!dbLottery) {
-                return next(ApiError.notFound("Lottery not found"));
-            }
-            if (dbLottery.status !== ELotteryStatus.PENDING) {
-                return next(ApiError.internal("Lottery is not active"));
             }
 
             // Check gifts
@@ -132,7 +83,7 @@ class LotteryController {
             }
 
             // Add participation task to queue
-            this.taskQueue.push(new ParticipateTask(dbLottery.id, dbUser.id, dbGifts, res, next));
+            this.taskQueue.push(new ParticipateTask(dbUser.id, dbGifts, res, next));
             this.processQueue();
         } catch (e: any) {
             console.error("LotteryController participateRequest error:", e.message);
@@ -163,37 +114,6 @@ class LotteryController {
         }
     };
 
-    // Check the win lottery request (runs asynchronously)
-    leaveLotteryRequest = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-        try {
-            const userId = req.userPayload?.userId;
-            if (!userId) {
-                return next(ApiError.unauthorized("User not authenticated"));
-            }
-
-            const dbUser = await UserDBController.get(userId);
-            if (!dbUser) {
-                return next(ApiError.notFound("User not found"));
-            }
-            if (!dbUser.enteredLotteryId) {
-                return next(ApiError.badRequest("User is not in a lottery"));
-            }
-
-            const userParticipations = await ParticipationDBController.getUserParticipations(dbUser.id, dbUser.enteredLotteryId);
-            if (userParticipations.length > 0) {
-                return next(ApiError.badRequest("User has already participated in the lottery"));
-            }
-
-            dbUser.enteredLotteryId = null;
-            await dbUser.save();
-
-            return res.json({ success: true });
-        } catch (e: any) {
-            console.error("LotteryController leaveLotteryRequest error:", e.message);
-            return next(ApiError.internal(e.message));
-        }
-    };
-
     // ---------------------------------- Process the queue of tasks ----------------------------------
     private async processQueue() {
         if (this.processing) return;
@@ -202,21 +122,9 @@ class LotteryController {
         while (this.taskQueue.length) {
             const task = this.taskQueue.shift()!;
             if (task instanceof ParticipateTask) {
-                const { lotteryId, userId, betGifts, res, next } = task;
+                const { userId, betGifts, res, next } = task;
                 try {
-                    const result = await this.participate(lotteryId, userId, betGifts);
-                    res.json({ success: true, result });
-                } catch (e: any) {
-                    if (e instanceof ApiError) {
-                        next(e);
-                    } else {
-                        next(ApiError.internal(e.message));
-                    }
-                }
-            } else if (task instanceof EnterTask) {
-                const { user, res, next } = task;
-                try {
-                    const result = await this.enterLottery(user);
+                    const result = await this.participate(userId, betGifts);
                     res.json({ success: true, result });
                 } catch (e: any) {
                     if (e instanceof ApiError) {
@@ -231,46 +139,27 @@ class LotteryController {
         this.processing = false;
     }
 
-    // Enter function (runs synchronously)
-    enterLottery = async (user: User) => {
-        // Create or get active lottery
-        let wasCreated = false;
-        let lottery = await LotteryDBController.getActive();
-        if (!lottery) {
-            lottery = await LotteryDBController.create();
-            wasCreated = true;
-        }
-        if (!lottery) {
-            throw ApiError.internal("Failed to create new lottery");
-        }
-
-        // Update user
-        user.enteredLotteryId = lottery.id;
-        await user.save();
-
-        return { lotteryId: lottery.id };
-    };
-
     // Participate function (runs synchronously)
-    participate = async (lotteryId: string, userId: string, betGifts: Gift[]) => {
+    participate = async (userId: string, betGifts: Gift[]) => {
         // Get active lotteries by size
         let userParticipations = [];
 
-        const [lottery, user] = await Promise.all([LotteryDBController.get(lotteryId, true), UserDBController.get(userId)]);
+        let lottery = await LotteryDBController.getActive();
         if (!lottery) {
-            throw ApiError.notFound("Lottery not found");
+            lottery = await LotteryDBController.create();
+            if (lottery) {
+                lottery.participations = [];
+            } else {
+                throw ApiError.internal("Failed to create new lottery");
+            }
         }
+
+        const user = await UserDBController.get(userId);
         if (lottery.status !== ELotteryStatus.PENDING) {
             throw ApiError.badRequest("Lottery is not active");
         }
         if (!user) {
             throw ApiError.notFound("User not found");
-        }
-        if (!user.enteredLotteryId) {
-            throw ApiError.badRequest("Enter lottery first");
-        }
-        if (user.enteredLotteryId !== lottery.id) {
-            throw ApiError.badRequest("User has already entered a lottery");
         }
 
         // Participate in the lottery
@@ -330,9 +219,9 @@ class LotteryController {
             for (const participation of lottery.participations) {
                 const tickets = participantTickets.get(participation.userId);
                 if (tickets !== undefined) {
-                    participantTickets.set(participation.userId, tickets + +participation.tonAmount);
+                    participantTickets.set(participation.userId, tickets + XGiftAPI.tonToTickets(participation.tonAmount));
                 } else {
-                    participantTickets.set(participation.userId, +participation.tonAmount);
+                    participantTickets.set(participation.userId, XGiftAPI.tonToTickets(participation.tonAmount));
                 }
             }
 

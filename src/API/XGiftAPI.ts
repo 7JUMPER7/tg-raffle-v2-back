@@ -51,20 +51,22 @@ class XGiftController {
 
     getGiftTonPrice = async (slug: string, backdropColor: string | null | undefined): Promise<number> => {
         try {
-            let maxTONPrice;
-            if (backdropColor && this.ceilCollections[backdropColor as EBackdropColor]) {
-                const collectionName = slug.split("-")[0];
-                maxTONPrice = this.ceilCollections[backdropColor as EBackdropColor][collectionName];
-            }
+            return 1.3;
+            // TODO: uncomment
+            // let maxTONPrice;
+            // if (backdropColor && this.ceilCollections[backdropColor as EBackdropColor]) {
+            //     const collectionName = slug.split("-")[0];
+            //     maxTONPrice = this.ceilCollections[backdropColor as EBackdropColor][collectionName];
+            // }
 
-            let giftTONPrice = await this.fetchGiftPrice(slug);
-            if (giftTONPrice) {
-                if (maxTONPrice && giftTONPrice > maxTONPrice) {
-                    giftTONPrice = maxTONPrice * 0.95;
-                }
-                return giftTONPrice;
-            }
-            return 0;
+            // let giftTONPrice = await this.fetchGiftPrice(slug);
+            // if (giftTONPrice) {
+            //     if (maxTONPrice && giftTONPrice > maxTONPrice) {
+            //         giftTONPrice = maxTONPrice * 0.95;
+            //     }
+            //     return giftTONPrice;
+            // }
+            // return 0;
         } catch (error: any) {
             console.error("XGiftAPI calculateGiftTickets error for gift", slug, ":", error.message);
             return 0;
@@ -77,6 +79,10 @@ class XGiftController {
         }
         const totalTicketsPrice = lottery.participations.reduce((sum, p) => sum + p.tonAmount, 0);
         return { tonValue: totalTicketsPrice };
+    };
+
+    tonToTickets = (ton: number): number => {
+        return Math.max(1, Math.round(ton * 10));
     };
 }
 

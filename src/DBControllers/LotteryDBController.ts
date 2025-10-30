@@ -47,7 +47,11 @@ class LotteryDBController {
         try {
             const lottery = await Lottery.findOne({
                 where: { status: ELotteryStatus.PENDING },
-                include: ["participations", "winner"],
+                include: [
+                    { association: "participations", separate: true, order: [["createdAt", "ASC"]], include: ["gift", "user"] },
+                    { association: "winParticipation", include: ["gift"] },
+                    "winner",
+                ],
                 order: [["createdAt", "ASC"]],
             });
             return lottery;
@@ -84,20 +88,19 @@ class LotteryDBController {
         let winParticipation: TLotteryParticipation | undefined;
         if (lottery.winner) {
             winner = UserDBController.parseUser(lottery.winner);
-        }
-        // TODO: check this
-        if (lottery.winParticipation) {
-            const wp = lottery.winParticipation;
-            winParticipation = {
-                id: wp.id,
-                user: UserDBController.parseUser(wp.user),
-                gift: {
-                    slug: wp.gift.slug,
-                    image: wp.gift.image,
-                    price: wp.gift.tonPrice,
-                },
-                createdAt: wp.createdAt,
-            };
+            if (lottery.winParticipation) {
+                const wp = lottery.winParticipation;
+                winParticipation = {
+                    id: wp.id,
+                    user: winner,
+                    gift: {
+                        slug: wp.gift.slug,
+                        image: wp.gift.image,
+                        price: wp.gift.tonPrice,
+                    },
+                    createdAt: wp.createdAt,
+                };
+            }
         }
 
         return {
