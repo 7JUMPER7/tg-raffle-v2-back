@@ -124,7 +124,7 @@ class TonDepositService {
 
         console.log(`New deposit for user ${userId || "Unknown"} from ${srcWallet} (${ton} TON)`);
         if (dbUser) {
-            await UserDBController.updateBalances(dbUser, ton, 0);
+            await UserDBController.updateBalances(dbUser, ton, 0, 0);
         } else {
             console.error(`User with referral code ${refCode} not found`);
         }
@@ -143,7 +143,7 @@ class TonDepositService {
             return null;
         }
         // Charge user before sending transaction to prevent multi withdraw
-        await UserDBController.updateBalances(user, -amount, 0);
+        await UserDBController.updateBalances(user, -amount, 0, 0);
 
         try {
             // Open wallet contract
@@ -193,7 +193,7 @@ class TonDepositService {
         } catch (e: any) {
             console.error("TonDepositService withdrawToAddress error:", e?.message ?? e);
             if (!wasSent) {
-                await UserDBController.updateBalances(user, amount, 0);
+                await UserDBController.updateBalances(user, amount, 0, 0);
             }
             return null;
         }

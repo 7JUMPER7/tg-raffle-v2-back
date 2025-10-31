@@ -116,7 +116,7 @@ class UserController {
                     );
                     if (isSubscribed === true) {
                         dbUser.subscribedChat = true;
-                        await UserDBController.updateBalances(dbUser, 0, POINTS_AMOUNT.subscribe);
+                        await UserDBController.updateBalances(dbUser, 0, 0, POINTS_AMOUNT.subscribe);
                         isUserSubscribed = true;
                     }
                     break;
@@ -133,7 +133,7 @@ class UserController {
                     );
                     if (isSubscribed === true) {
                         dbUser.subscribedChannel = true;
-                        await UserDBController.updateBalances(dbUser, 0, POINTS_AMOUNT.subscribe);
+                        await UserDBController.updateBalances(dbUser, 0, 0, POINTS_AMOUNT.subscribe);
                         isUserSubscribed = true;
                     }
                     break;

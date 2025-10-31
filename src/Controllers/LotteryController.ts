@@ -2,13 +2,10 @@ import { NextFunction, Response } from "express";
 import { ApiError } from "../error/ApiError";
 import LotteryDBController from "../DBControllers/LotteryDBController";
 import { ELotteryStatus } from "../helpers/Enums";
-import { EWebSocketMessage } from "../helpers/WSTypes";
 import { TGift, TLotteryParsed } from "../helpers/Types";
 import ParticipationDBController from "../DBControllers/ParticipationDBController";
 import UserDBController from "../DBControllers/UserDBController";
 import GiftDBController from "../DBControllers/GiftDBController";
-import LotteryWebSocketService from "../services/LotteryWebSocketService";
-import { TWebSocketMessage, TWebSocketParticipation } from "../helpers/WSTypes";
 import { AuthenticatedRequest } from "../helpers/Interfaces";
 import Gift from "../models/Gift.model";
 import LotteryParticipation from "../models/LotteryParticipation.model";
@@ -21,6 +18,7 @@ import {
     SECONDS_TO_EXPIRE,
     SERVICE_FEE_PERCENT,
 } from "../configVars";
+import WebsocketNotifier from "../services/websocket/WebsocketNotifier";
 
 // Participate in the lottery task class
 class ParticipateTask {
@@ -145,11 +143,13 @@ class LotteryController {
         // Get active lotteries by size
         let userParticipations = [];
 
+        let wasCreated = false;
         let lottery = await LotteryDBController.getActive();
         if (!lottery) {
             lottery = await LotteryDBController.create();
             if (lottery) {
                 lottery.participations = [];
+                wasCreated = true;
             } else {
                 throw ApiError.internal("Failed to create new lottery");
             }
@@ -185,17 +185,20 @@ class LotteryController {
         }
 
         // Broadcast participation message to WebSocket clients
-        const wsMessage: TWebSocketMessage<TWebSocketParticipation> = {
-            type: EWebSocketMessage.PARTICIPATION,
-            data: {
+        if (wasCreated) {
+            const updatedLottery = await LotteryDBController.getParsed(lottery.id);
+            if (updatedLottery) {
+                WebsocketNotifier.newLottery(updatedLottery);
+            }
+        } else {
+            WebsocketNotifier.newLotteryParticipation({
                 lotteryId: lottery.id,
                 expiresAt: lottery.expiresAt,
                 user: UserDBController.parseUser(user),
                 gifts: participatedGifts,
                 createdAt: new Date(),
-            },
-        };
-        LotteryWebSocketService.broadcastMessage(lottery.id, wsMessage);
+            });
+        }
 
         return userParticipations;
     };
@@ -287,7 +290,7 @@ class LotteryController {
             const winnerUser = await UserDBController.get(winnerUserId);
             if (winnerUser) {
                 winnerUser.wonLotteryId = lottery.id;
-                await UserDBController.updateBalances(winnerUser, 0, POINTS_AMOUNT.win);
+                await UserDBController.updateBalances(winnerUser, 0, 0, POINTS_AMOUNT.win);
 
                 // Update referrer
                 if (winnerUser.referrerId && feeGiftsTonAmount !== 0) {
@@ -322,11 +325,7 @@ class LotteryController {
             if (!updatedLottery) {
                 throw new Error("Failed to get updated lottery");
             }
-            const wsMessage: TWebSocketMessage<TLotteryParsed> = {
-                type: EWebSocketMessage.LOTTERY_CLOSE,
-                data: updatedLottery,
-            };
-            LotteryWebSocketService.broadcastMessage(lottery.id, wsMessage);
+            WebsocketNotifier.lotteryClose(updatedLottery);
 
             return lottery;
         } catch (e: any) {

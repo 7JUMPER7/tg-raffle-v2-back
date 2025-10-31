@@ -30,9 +30,9 @@ export const tgAuthMiddleware = (req: Request, res: Response, next: NextFunction
         const computedHash = signature.toString(CryptoJS.enc.Hex);
 
         // TODO: uncomment
-        // if (computedHash !== hash) {
-        //     return next(ApiError.forbidden("wrong WebAppInitData"));
-        // }
+        if (computedHash !== hash) {
+            return next(ApiError.forbidden("wrong WebAppInitData"));
+        }
 
         next();
     } catch (e: any) {

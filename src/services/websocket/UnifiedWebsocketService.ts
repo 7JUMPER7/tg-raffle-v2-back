@@ -3,6 +3,7 @@ import WebSocket, { Server as WebSocketServer } from "ws";
 import WebSocketAuthManager from "./WebSocketAuthManager";
 import WebSocketConnectionManager from "./WebSocketConnectionManager";
 import { TWebSocketMessage, EWebSocketMessage, IAuthenticatedWebSocket } from "../../helpers/WSTypes";
+import LotteryDBController from "../../DBControllers/LotteryDBController";
 
 class UnifiedWebsocketService {
     private wss: WebSocketServer | null;
@@ -45,12 +46,10 @@ class UnifiedWebsocketService {
         WebSocketConnectionManager.addConnection(authWs);
 
         // Send connection success message
+        const activeLottery = await LotteryDBController.getActive();
         this.sendToConnection(authWs, {
-            type: EWebSocketMessage.CONNECTION_SUCCESS,
-            data: {
-                userId: userPayload.userId!,
-                message: "Connected successfully",
-            },
+            type: EWebSocketMessage.LOTTERY_INFO,
+            data: activeLottery,
         });
 
         // Setup pong handler for heartbeat
@@ -72,13 +71,6 @@ class UnifiedWebsocketService {
         authWs.on("error", (error) => {
             console.error(`UnifiedWebsocketService handleConnection WebSocket error for user ${userPayload.userId}:`, error);
         });
-
-        setTimeout(() => {
-            this.sendToUser(authWs.userId ?? "", {
-                type: EWebSocketMessage.BALANCE_UPDATE,
-                data: { newBalance: 100 },
-            } as TWebSocketMessage<any>);
-        }, 2000);
     }
 
     // Incoming message handler
@@ -198,14 +190,14 @@ class UnifiedWebsocketService {
             clearInterval(this.pingInterval);
             this.pingInterval = null;
         }
-        console.log("[UnifiedWebsocketService] WebSocket server closed");
+        console.log("UnifiedWebsocketService WebSocket server closed");
     }
 
     // Stop WebSocket server
     stop() {
         if (this.wss) {
             this.wss.close(() => {
-                console.log("[UnifiedWebsocketService] WebSocket server stopped");
+                console.log("UnifiedWebsocketService WebSocket server stopped");
             });
         }
     }

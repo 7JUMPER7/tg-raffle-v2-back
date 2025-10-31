@@ -4,6 +4,7 @@ import * as referralCodes from "referral-codes";
 import { UniqueConstraintError, Op, QueryTypes } from "sequelize";
 import { TUser } from "../helpers/Types";
 import { ELanguageCode } from "../helpers/Enums";
+import WebsocketNotifier from "../services/websocket/WebsocketNotifier";
 
 class UserDBController {
     create = async (
@@ -165,11 +166,17 @@ class UserDBController {
         };
     };
 
-    updateBalances = async (user: User, tonBalance: number, pointsBalance: number) => {
+    updateBalances = async (user: User, tonBalance: number, starsBalance: number, pointsBalance: number, disableWS: boolean = false) => {
         if (tonBalance !== 0) {
             user.tonBalance = parseFloat((user.tonBalance + tonBalance).toFixed(9));
             if (user.tonBalance < 0) {
                 user.tonBalance = 0;
+            }
+        }
+        if (starsBalance !== 0) {
+            user.starsBalance = parseFloat((user.starsBalance + starsBalance).toFixed(3));
+            if (user.starsBalance < 0) {
+                user.starsBalance = 0;
             }
         }
         if (pointsBalance !== 0) {
@@ -179,6 +186,10 @@ class UserDBController {
             }
         }
         await user.save();
+
+        if (!disableWS) {
+            WebsocketNotifier.updateUserBalances(user);
+        }
         return user;
     };
 

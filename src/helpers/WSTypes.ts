@@ -16,6 +16,7 @@ export enum EWebSocketMessage {
 
     // Lottery events
     LOTTERY_INFO = "lottery-info",
+    NEW_LOTTERY = "new-lottery",
     PARTICIPATION = "participation",
     LOTTERY_CLOSE = "lottery-close",
 
@@ -51,6 +52,7 @@ export type TWebSocketParticipation = {
 
 // User events
 export type TBalancesUpdate = {
-    userId: string;
-    newBalance: number;
+    ton: number;
+    stars: number;
+    points: number;
 };
