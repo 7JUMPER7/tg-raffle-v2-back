@@ -8,8 +8,8 @@ import errorHandler from "./middleware/errorHandlingMiddleware";
 import sequelize from "./db";
 import LotteryAutocancelService from "./services/LotteryAutocancelService";
 import TelegramService from "./services/TelegramService";
-import LotteryWebSocketService from "./services/LotteryWebSocketService";
 import TelegramBotService from "./services/TelegramBotService";
+import UnifiedWebsocketService from "./services/websocket/UnifiedWebsocketService";
 
 const app = express();
 app.use(cors());
@@ -38,7 +38,7 @@ const start = async () => {
 
         // HTTP
         const server = http.createServer(app);
-        LotteryWebSocketService.startWebSocket(server);
+        UnifiedWebsocketService.startWebSocket(server);
 
         server.listen(PORT, () => {
             console.log("Server started on port: " + PORT);

@@ -11,13 +11,6 @@ export enum ECoinflipStatus {
     FINISHED = "FINISHED",
 }
 
-export enum EWebSocketMessage {
-    LOTTERY_INFO = "lottery-info",
-    PARTICIPATION = "participation",
-    LOTTERY_CLOSE = "lottery-close",
-    CHAT_MESSAGE = "chat-message",
-}
-
 export enum ETgSubscription {
     CHAT = "chat",
     CHANNEL = "channel",

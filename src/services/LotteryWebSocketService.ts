@@ -1,7 +1,7 @@
 import { IncomingMessage, Server } from "http";
 import WebSocket, { Server as WebSocketServer } from "ws";
 import { parse as parseUrl } from "url";
-import { EWebSocketMessage } from "../helpers/Enums";
+import { EWebSocketMessage } from "../helpers/WSTypes";
 import LotteryDBController from "../DBControllers/LotteryDBController";
 import { TWebSocketMessage } from "../helpers/WSTypes";
 import { TLotteryParsed } from "../helpers/Types";

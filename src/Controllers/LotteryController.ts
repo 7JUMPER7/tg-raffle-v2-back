@@ -1,7 +1,8 @@
 import { NextFunction, Response } from "express";
 import { ApiError } from "../error/ApiError";
 import LotteryDBController from "../DBControllers/LotteryDBController";
-import { ELotteryStatus, EWebSocketMessage } from "../helpers/Enums";
+import { ELotteryStatus } from "../helpers/Enums";
+import { EWebSocketMessage } from "../helpers/WSTypes";
 import { TGift, TLotteryParsed } from "../helpers/Types";
 import ParticipationDBController from "../DBControllers/ParticipationDBController";
 import UserDBController from "../DBControllers/UserDBController";
