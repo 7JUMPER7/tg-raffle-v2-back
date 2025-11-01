@@ -33,13 +33,13 @@ export enum EActivityType {
 }
 
 export enum EGiftQuality {
-    GODLIKE = "GODLIKE",
-    ULTRA = "ULTRA",
-    RARE = "RARE",
-    UNCOMMON = "UNCOMMON",
-    COMMON = "COMMON",
-    AVERAGE = "AVERAGE",
-    POOR = "POOR",
+    GODLIKE = 0,
+    ULTRA = 1,
+    RARE = 2,
+    UNCOMMON = 3,
+    COMMON = 4,
+    AVERAGE = 5,
+    POOR = 6,
 }
 
 export enum ECurrency {

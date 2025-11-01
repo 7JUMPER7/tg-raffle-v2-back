@@ -41,11 +41,12 @@ export type TLotteryParsed = {
     winParticipation?: TLotteryParticipation;
 };
 
-export type TLuckyOne = {
-    user?: TUser;
+export type TStatLottery = {
+    user: TUser;
     gifts: TGift[];
     totalTon: number;
     totalParticipations: number;
+    expiresAt: Date;
 };
 
 export type TFullUserInfo = {

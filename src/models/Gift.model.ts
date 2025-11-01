@@ -60,7 +60,7 @@ class Gift extends Model<Gift> {
     declare backdropColor: string | null;
 
     @Column({
-        type: DataType.STRING,
+        type: DataType.INTEGER,
         allowNull: false,
     })
     declare quality: EGiftQuality;

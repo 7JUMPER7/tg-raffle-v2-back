@@ -72,16 +72,6 @@ class UserController {
         }
     };
 
-    getLuckyOnes = async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const users = await LotteryDBController.getLuckyOnes();
-            return res.json(users);
-        } catch (e: any) {
-            console.error("UserController getLuckyOnes error:", e.message);
-            return next(ApiError.internal(e.message));
-        }
-    };
-
     checkChannelSubscription = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         try {
             const userId = req.userPayload?.userId;

@@ -293,7 +293,7 @@ class LotteryController {
             const winnerUser = await UserDBController.get(winnerUserId);
             if (winnerUser) {
                 winnerUser.wonLotteryId = lottery.id;
-                await UserDBController.updateBalances(winnerUser, 0, 0, POINTS_AMOUNT.win);
+                await UserDBController.updateBalances(winnerUser, 0, 0, POINTS_AMOUNT.win, true);
                 await WebsocketNotifier.updateUserGifts(winnerUser.id);
 
                 // Update referrer

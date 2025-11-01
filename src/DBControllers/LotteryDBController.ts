@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { ELotteryStatus } from "../helpers/Enums";
-import { TLotteryParsed, TLotteryParticipation, TLuckyOne, TUser } from "../helpers/Types";
+import { TLotteryParsed, TLotteryParticipation, TStatLottery, TUser } from "../helpers/Types";
 import Lottery from "../models/Lottery.model";
 import { v4 } from "uuid";
 import UserDBController from "./UserDBController";
@@ -128,11 +128,11 @@ class LotteryDBController {
         }
     };
 
-    getLuckyOnes = async (limit: number = 30): Promise<TLuckyOne[]> => {
+    getLatestLotteries = async (limit: number = 30): Promise<TStatLottery[]> => {
         try {
             const lotteries = await Lottery.findAll({
                 where: {
-                    [Op.or]: [{ status: ELotteryStatus.FINISHED }, { status: ELotteryStatus.UNCLAIMED }],
+                    status: ELotteryStatus.FINISHED,
                 },
                 include: [{ association: "participations", separate: true, include: ["gift", "user"] }, "winner"],
                 order: [["createdAt", "DESC"]],
@@ -141,15 +141,16 @@ class LotteryDBController {
 
             const parsedLotteries = lotteries.map((lottery) => {
                 const winner = lottery.winner ? UserDBController.parseUser(lottery.winner) : undefined;
-                const luckyOne: TLuckyOne = {
-                    user: winner,
+                const statLottery: TStatLottery = {
+                    user: winner!,
                     gifts: lottery.participations.map((p) => {
                         return { ...GiftDBController.parseGift(p.gift), price: p.tonAmount };
                     }),
                     totalTon: lottery.participations.reduce((acc, p) => acc + p.tonAmount, 0),
                     totalParticipations: lottery.participations.length,
+                    expiresAt: lottery.expiresAt || lottery.updatedAt,
                 };
-                return luckyOne;
+                return statLottery;
             });
             return parsedLotteries;
         } catch (e: any) {
@@ -157,6 +158,36 @@ class LotteryDBController {
             return [];
         }
     };
+
+    // getLuckyOnes = async (limit: number = 30): Promise<TStatLottery[]> => {
+    //     try {
+    //         const lotteries = await Lottery.findAll({
+    //             where: {
+    //                 [Op.or]: [{ status: ELotteryStatus.FINISHED }, { status: ELotteryStatus.UNCLAIMED }],
+    //             },
+    //             include: [{ association: "participations", separate: true, include: ["gift", "user"] }, "winner"],
+    //             order: [["createdAt", "DESC"]],
+    //             limit,
+    //         });
+
+    //         const parsedLotteries = lotteries.map((lottery) => {
+    //             const winner = lottery.winner ? UserDBController.parseUser(lottery.winner) : undefined;
+    //             const luckyOne: TStatLottery = {
+    //                 user: winner,
+    //                 gifts: lottery.participations.map((p) => {
+    //                     return { ...GiftDBController.parseGift(p.gift), price: p.tonAmount };
+    //                 }),
+    //                 totalTon: lottery.participations.reduce((acc, p) => acc + p.tonAmount, 0),
+    //                 totalParticipations: lottery.participations.length,
+    //             };
+    //             return luckyOne;
+    //         });
+    //         return parsedLotteries;
+    //     } catch (e: any) {
+    //         console.error("LotteryDBController getLuckyOnes error:", e.message);
+    //         return [];
+    //     }
+    // };
 }
 
 export default new LotteryDBController();
