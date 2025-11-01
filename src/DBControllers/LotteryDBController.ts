@@ -93,11 +93,7 @@ class LotteryDBController {
                 winParticipation = {
                     id: wp.id,
                     user: winner,
-                    gift: {
-                        slug: wp.gift.slug,
-                        image: wp.gift.image,
-                        price: wp.gift.tonPrice,
-                    },
+                    gift: GiftDBController.parseGift(wp.gift),
                     createdAt: wp.createdAt,
                 };
             }

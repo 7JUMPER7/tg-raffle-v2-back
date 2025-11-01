@@ -4,6 +4,7 @@ import UserDBController from "../DBControllers/UserDBController";
 import XGiftAPI from "../API/XGiftAPI";
 import { StringSession } from "telegram/sessions";
 import TelegramBotService from "./TelegramBotService";
+import WebsocketNotifier from "./websocket/WebsocketNotifier";
 
 if (!process.env.TELEGRAM_APP_ID) {
     throw new Error("TELEGRAM_APP_ID not set");
@@ -145,6 +146,7 @@ class TelegramService {
                 TelegramBotService.sendGiftDepositMessage(dbUser.telegramId, gift.slug, dbUser.telegramLanguage);
                 const tonPrice = await XGiftAPI.getGiftTonPrice(gift.slug, backgroundColor);
                 await GiftDBController.create(dbUser.id, userId, message.id, gift.slug, tonPrice, backgroundColor);
+                await WebsocketNotifier.updateUserGifts(dbUser.id);
             }
         } catch (e: any) {
             console.error("TelegramService processNewGift error:", e.message);

@@ -53,7 +53,7 @@ class UserController {
                 telegramImage: dbUser.telegramImage,
                 referralCode: dbUser.referralCode,
                 gifts: dbUser.gifts.map((g) => {
-                    return { id: g.id, slug: g.slug, image: g.image, price: g.tonPrice, isUsed: g.isUsed };
+                    return { id: g.id, slug: g.slug, image: g.image, quality: g.quality, price: g.tonPrice, isUsed: g.isUsed };
                 }),
                 tonBalance: dbUser.tonBalance,
                 starsBalance: dbUser.starsBalance,

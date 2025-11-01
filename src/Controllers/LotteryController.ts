@@ -2,7 +2,7 @@ import { NextFunction, Response } from "express";
 import { ApiError } from "../error/ApiError";
 import LotteryDBController from "../DBControllers/LotteryDBController";
 import { ELotteryStatus } from "../helpers/Enums";
-import { TGift, TLotteryParsed } from "../helpers/Types";
+import { TGift } from "../helpers/Types";
 import ParticipationDBController from "../DBControllers/ParticipationDBController";
 import UserDBController from "../DBControllers/UserDBController";
 import GiftDBController from "../DBControllers/GiftDBController";
@@ -200,6 +200,9 @@ class LotteryController {
             });
         }
 
+        // Send updated user gifts to client
+        await WebsocketNotifier.updateUserGifts(user.id);
+
         return userParticipations;
     };
 
@@ -291,6 +294,7 @@ class LotteryController {
             if (winnerUser) {
                 winnerUser.wonLotteryId = lottery.id;
                 await UserDBController.updateBalances(winnerUser, 0, 0, POINTS_AMOUNT.win);
+                await WebsocketNotifier.updateUserGifts(winnerUser.id);
 
                 // Update referrer
                 if (winnerUser.referrerId && feeGiftsTonAmount !== 0) {
@@ -314,7 +318,8 @@ class LotteryController {
 
             // Update points for lottery participants
             const updatedParticipants = await UserDBController.updateParticipantsPointsBatch(lottery.id, POINTS_AMOUNT.spin);
-            console.log("Users with updated points:", updatedParticipants);
+            WebsocketNotifier.updateUsersBalancesBatched(updatedParticipants);
+            console.log("Users with updated points:", updatedParticipants.length);
 
             // Leave users from lottery
             const affectedUsersCount = await UserDBController.leaveUsersFromLottery(lottery.id);

@@ -79,6 +79,22 @@ class GiftDBController {
         }
     };
 
+    getUserGifts = async (userId: string, withUsed: boolean = false) => {
+        try {
+            const gifts = await Gift.findAll({
+                where: {
+                    userId,
+                    withdrawnAt: null,
+                    ...(withUsed ? {} : { isUsed: false }),
+                },
+            });
+            return gifts;
+        } catch (e: any) {
+            console.error("GiftDBController getUserGifts error:", e.message);
+            return [];
+        }
+    };
+
     delete = async (id: string) => {
         try {
             const gift = await Gift.destroy({
@@ -98,6 +114,7 @@ class GiftDBController {
             slug: gift.slug,
             image: gift.image,
             price: gift.tonPrice,
+            quality: gift.quality,
         };
     };
 

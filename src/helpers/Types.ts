@@ -16,13 +16,13 @@ export type TGift = {
     slug: string;
     image?: string;
     price: number;
+    quality: EGiftQuality;
 };
 
 export type TCaseItem = {
     slug: string;
     image: string;
     backdropColor: string;
-    quality: EGiftQuality;
 };
 
 export type TLotteryParticipation = {

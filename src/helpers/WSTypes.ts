@@ -4,14 +4,13 @@ import { TGift, TUser } from "./Types";
 
 export interface IAuthenticatedWebSocket extends WebSocket {
     userPayload?: JwtUserPayload;
-    userId?: string; // TODO: not undefined
+    userId: string;
     isAlive: boolean;
     connectedAt: number;
 }
 
 export enum EWebSocketMessage {
     // System events
-    CONNECTION_SUCCESS = "connection-success",
     ERROR = "error",
 
     // Lottery events
@@ -22,6 +21,7 @@ export enum EWebSocketMessage {
 
     // User events
     BALANCE_UPDATE = "balance-update",
+    GIFTS_UPDATE = "gifts-update",
 }
 
 // Global websocket message type

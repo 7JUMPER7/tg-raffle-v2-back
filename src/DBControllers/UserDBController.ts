@@ -5,6 +5,7 @@ import { UniqueConstraintError, Op, QueryTypes } from "sequelize";
 import { TUser } from "../helpers/Types";
 import { ELanguageCode } from "../helpers/Enums";
 import WebsocketNotifier from "../services/websocket/WebsocketNotifier";
+import { TBalancesUpdate } from "../helpers/WSTypes";
 
 class UserDBController {
     create = async (
@@ -188,25 +189,37 @@ class UserDBController {
         await user.save();
 
         if (!disableWS) {
-            WebsocketNotifier.updateUserBalances(user);
+            WebsocketNotifier.updateUserBalances(user.id, {
+                ton: user.tonBalance,
+                stars: user.starsBalance,
+                points: user.pointsBalance,
+            });
         }
         return user;
     };
 
-    updateParticipantsPointsBatch = async (lotteryId: string, amount: number) => {
+    updateParticipantsPointsBatch = async (lotteryId: string, amount: number): Promise<({ userId: string } & TBalancesUpdate)[]> => {
         try {
-            const [rows] = await User.update(
-                { pointsBalance: User.sequelize?.literal(`"pointsBalance" + ${amount}`) },
+            const [_, updatedUsers] = await User.update(
+                {
+                    pointsBalance: User.sequelize!.literal(`GREATEST("pointsBalance" + ${amount}, 0)`),
+                },
                 {
                     where: {
                         enteredLotteryId: lotteryId,
                     },
+                    returning: true,
                 }
             );
-            return rows;
+            return updatedUsers.map((user) => ({
+                userId: user.id,
+                ton: user.tonBalance,
+                stars: user.starsBalance,
+                points: user.pointsBalance,
+            }));
         } catch (e: any) {
             console.error("UserDBController updateParticipantsPointsBatch error:", e.message);
-            return 0;
+            return [];
         }
     };
 

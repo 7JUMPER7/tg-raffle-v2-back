@@ -1,6 +1,6 @@
+import GiftDBController from "../../DBControllers/GiftDBController";
 import { TLotteryParsed } from "../../helpers/Types";
 import { EWebSocketMessage, TBalancesUpdate, TWebSocketParticipation } from "../../helpers/WSTypes";
-import User from "../../models/User.model";
 import UnifiedWebsocketService from "./UnifiedWebsocketService";
 
 class WebsocketNotifier {
@@ -41,18 +41,33 @@ class WebsocketNotifier {
     };
 
     // Update specific user balances
-    updateUserBalances = (user: User) => {
+    updateUserBalances = (userId: string, balances: TBalancesUpdate) => {
         try {
-            UnifiedWebsocketService.sendToUser(user.id, {
+            UnifiedWebsocketService.sendToUser(userId, {
                 type: EWebSocketMessage.BALANCE_UPDATE,
-                data: {
-                    ton: user.tonBalance,
-                    stars: user.starsBalance,
-                    points: user.pointsBalance,
-                } as TBalancesUpdate,
+                data: balances,
             });
         } catch (e: any) {
             console.error("WebsocketNotifier updateUserBalances error:", e.message);
+        }
+    };
+    updateUsersBalancesBatched = (balances: ({ userId: string } & TBalancesUpdate)[]) => {
+        balances.forEach(({ userId, ...balances }) => {
+            this.updateUserBalances(userId, balances);
+        });
+    };
+
+    // Update specific user gifts
+    updateUserGifts = async (userId: string) => {
+        try {
+            const updatedUserGifts = await GiftDBController.getUserGifts(userId);
+            const parsedGifts = updatedUserGifts.map((g) => GiftDBController.parseGift(g));
+            UnifiedWebsocketService.sendToUser(userId, {
+                type: EWebSocketMessage.GIFTS_UPDATE,
+                data: parsedGifts,
+            });
+        } catch (e: any) {
+            console.error("WebsocketNotifier updateUserGifts error:", e.message);
         }
     };
 }

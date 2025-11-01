@@ -4,6 +4,7 @@ import { ApiError } from "../error/ApiError";
 import UserDBController from "../DBControllers/UserDBController";
 import GiftDBController from "../DBControllers/GiftDBController";
 import TelegramService from "../services/TelegramService";
+import WebsocketNotifier from "../services/websocket/WebsocketNotifier";
 
 class GiftController {
     withdrawGift = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -40,6 +41,7 @@ class GiftController {
             if (result.success === true) {
                 dbGift.withdrawnAt = new Date();
                 await dbGift.save();
+                await WebsocketNotifier.updateUserGifts(dbUser.id);
             }
 
             return res.json({

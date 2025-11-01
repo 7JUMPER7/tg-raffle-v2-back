@@ -49,7 +49,7 @@ class UnifiedWebsocketService {
         const activeLottery = await LotteryDBController.getActive();
         this.sendToConnection(authWs, {
             type: EWebSocketMessage.LOTTERY_INFO,
-            data: activeLottery,
+            data: activeLottery ? LotteryDBController.parseLottery(activeLottery) : null,
         });
 
         // Setup pong handler for heartbeat
